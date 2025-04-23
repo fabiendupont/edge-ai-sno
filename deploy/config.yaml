@@ -1,0 +1,16 @@
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: minio-credentials
+stringData:
+  minioRootUsername: minio
+  minioRootPassword: minio123
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: minio-webhook-config
+data:
+  bucketName: mybucket
+  pipelineName: mypipeline
