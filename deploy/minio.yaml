@@ -73,7 +73,10 @@ spec:
             - name: MINIO_NOTIFY_WEBHOOK_ENABLE_kfp
               value: "on"
             - name: MINIO_NOTIFY_WEBHOOK_ENDPOINT_kfp
-              value: "https://minio-webhook.at-test.svc.cluster.local:8443/minio-webhook"
+              valueFrom:
+                configMapKeyRef:
+                  name: minio-webhook-config
+                  key: minioWebhookEndpoint
           ports:
             - containerPort: 9000
               protocol: TCP

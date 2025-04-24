@@ -14,3 +14,4 @@ metadata:
 data:
   bucketName: mybucket
   pipelineName: mypipeline
+  minioWebhookEndpoint: "https://minio-webhook.myspace.svc.cluster.local:8443/minio-webhook"
