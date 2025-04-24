@@ -46,6 +46,16 @@ podman build -t quay.io/fdupont-redhat/minio-webhook:latest -f Containerfile .
 podman push quay.io/fdupont-redhat/minio-webhook:latest
 ```
 
+## Building the webhook container image
+
+```bash
+podman build -t quay.io/fdupont-redhat/minio-webhook:latest -f Containerfile .
+```
+
+```bash
+podman push quay.io/fdupont-redhat/minio-webhook:latest
+```
+
 ## Using your own webhook container image
 
 Simply modify the `spec.template.spec.containers[0].image` field in
