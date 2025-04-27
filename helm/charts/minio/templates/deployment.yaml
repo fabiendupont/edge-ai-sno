@@ -1,0 +1,110 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: minio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: minio-data
+        - name: minio-tls
+          secret:
+            secretName: minio-tls
+      containers:
+        - resources:
+            limits:
+              cpu: 250m
+              memory: 1Gi
+            requests:
+              cpu: 20m
+              memory: 100Mi
+          readinessProbe:
+            tcpSocket:
+              port: 9000
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          name: minio
+          livenessProbe:
+            tcpSocket:
+              port: 9000
+            initialDelaySeconds: 30
+            timeoutSeconds: 1
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: minio-root-credentials
+                  key: username
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: minio-root-credentials
+                  key: password
+            {{- range .Values.pipelineServer.pipelines }}
+            - name: MINIO_NOTIFY_WEBHOOK_ENABLE_kfp_{{ . }}
+              value: "on"
+            - name: MINIO_NOTIFY_WEBHOOK_ENDPOINT_kfp_{{ . }}
+              value: "https://minio-webhook.{{ .Release.namespace }}.svc.cluster.local/pipeline?name={{ . }}"
+            {{- end }}
+          ports:
+            - containerPort: {{ .Values.minio.services.api.port }}
+              protocol: TCP
+            - containerPort: {{ .Values.minio.services.ui.port }}
+              protocol: TCP
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: data
+              mountPath: /data
+              subPath: minio
+            - name: minio-tls
+              mountPath: /var/run/secrets/minio-tls
+              readOnly: true
+          terminationMessagePolicy: File
+          image: '{{ .Values.minio.image | default "quay.io/minio/minio" }}'
+          args:
+            - server
+            - /data
+            - --console-address
+            - ":{{ .Values.minio.services.ui.port }}"
+            - --certs-dir
+            - /tmp/certs
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    mkdir -p /tmp/certs/CAs ;
+                    ln -s /var/run/secrets/minio-tls/tls.key /tmp/certs/private.key ;
+                    ln -s /var/run/secrets/minio-tls/tls.crt /tmp/certs/public.crt ;
+                    ln -s /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt /tmp/certs/CAs/service-ca.crt
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "rm -f /tmp/certs"]
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600

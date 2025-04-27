@@ -1,0 +1,18 @@
+{{- range .Values.minio.services }}
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: minio-{{ . }}
+spec:
+  to:
+    kind: Service
+    name: minio
+    weight: 100
+  port:
+    targetPort: {{ . }}
+  wildcardPolicy: None
+  tls:
+    termination: reencrypt
+    insecureEdgeTerminationPolicy: Redirect
+{{- end }}
