@@ -70,13 +70,13 @@ spec:
                 secretKeyRef:
                   name: minio-credentials
                   key: minioRootPassword
-            - name: MINIO_NOTIFY_WEBHOOK_ENABLE_kfp
+            - name: MINIO_NOTIFY_WEBHOOK_ENABLE_mybucket
               value: "on"
-            - name: MINIO_NOTIFY_WEBHOOK_ENDPOINT_kfp
+            - name: MINIO_NOTIFY_WEBHOOK_ENDPOINT_mybucket
               valueFrom:
                 configMapKeyRef:
                   name: minio-webhook-config
-                  key: minioWebhookEndpoint
+                  key: minioWebhookEndpoint_mybucket
           ports:
             - containerPort: 9000
               protocol: TCP

@@ -14,4 +14,3 @@ USER 1000
 EXPOSE 8080
 
 CMD ["gunicorn", "--config", "gunicorn_config.py", "app:app"]
-#CMD ["/usr/bin/python3.12", "/app/app.py"]

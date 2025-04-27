@@ -15,3 +15,5 @@ if not tls_secret_name:
 keyfile = f"/var/run/secrets/{tls_secret_name}/tls.key"
 certfile = f"/var/run/secrets/{tls_secret_name}/tls.crt"
 ca_certs = f"/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt"
+
+log_level = 'debug'

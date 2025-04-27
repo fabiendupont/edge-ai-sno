@@ -77,6 +77,11 @@ spec:
                 configMapKeyRef:
                   name: minio-webhook-config
                   key: bucketName
+            - name: KFP_PIPELINE_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: minio-webhook-config
+                  key: pipelineEndpoint
             - name: KFP_PIPELINE_NAME
               valueFrom:
                 configMapKeyRef:
