@@ -3,10 +3,11 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: minio-data
+  namespace: minio
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: {{.Values.minio.size}}
+      storage: 20Gi
   volumeMode: Filesystem

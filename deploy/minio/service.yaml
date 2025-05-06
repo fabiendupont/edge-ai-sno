@@ -5,16 +5,19 @@ metadata:
   annotations:
     service.beta.openshift.io/serving-cert-secret-name: minio-tls
   name: minio
+  namespace: minio
 spec:
   ipFamilies:
     - IPv4
   ports:
-    {{- range .Values.minio.services }}
-    - name: {{ . }}
+    - name: api
       protocol: TCP
-      port: {{ .port }}
-      targetPort: {{ .port }}
-    {{- end }}
+      port: 9000
+      targetPort: 9000
+    - name: ui
+      protocol: TCP
+      port: 9090
+      targetPort: 9090
   internalTrafficPolicy: Cluster
   type: ClusterIP
   ipFamilyPolicy: SingleStack

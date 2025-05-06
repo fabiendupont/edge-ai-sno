@@ -1,0 +1,8 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: edge-ai-app
+  labels:
+    opendatahub.io/dashboard: "true"
+    modelmesh-enabled: "true"

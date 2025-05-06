@@ -1,67 +1,55 @@
 ---
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: minio-webhook-data
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-  volumeMode: Filesystem
----
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: minio-webhook
+  name: minio
+  namespace: minio
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: minio-webhook
+      app: minio
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: minio-webhook
+        app: minio
     spec:
+      name: minio
       volumes:
         - name: data
           persistentVolumeClaim:
-            claimName: minio-webhook-data
-        - name: minio-webhook-tls
+            claimName: minio-data
+        - name: minio-tls
           secret:
-            secretName: minio-webhook-tls
+            secretName: minio-tls
       containers:
         - resources:
             limits:
               cpu: 250m
-              memory: 256Mi
+              memory: 1Gi
             requests:
               cpu: 20m
               memory: 100Mi
           readinessProbe:
             tcpSocket:
-              port: 8443
+              port: 9000
             initialDelaySeconds: 5
             timeoutSeconds: 1
             periodSeconds: 5
             successThreshold: 1
             failureThreshold: 3
           terminationMessagePath: /dev/termination-log
-          name: minio-webhook
+          name: minio
           livenessProbe:
             tcpSocket:
-              port: 8443
+              port: 9000
             initialDelaySeconds: 30
             timeoutSeconds: 1
             periodSeconds: 5
             successThreshold: 1
             failureThreshold: 3
           env:
-            - name: MINIO_SERVICE_NAME
-              value: minio
             - name: MINIO_ROOT_USER
               valueFrom:
                 secretKeyRef:
@@ -72,50 +60,50 @@ spec:
                 secretKeyRef:
                   name: minio-credentials
                   key: minioRootPassword
-            - name: MINIO_BUCKET_NAME
+            - name: MINIO_NOTIFY_WEBHOOK_ENABLE_mybucket
+              value: "on"
+            - name: MINIO_NOTIFY_WEBHOOK_ENDPOINT_mybucket
               valueFrom:
                 configMapKeyRef:
                   name: minio-webhook-config
-                  key: bucketName
-            - name: KFP_PIPELINE_ENDPOINT
-              valueFrom:
-                configMapKeyRef:
-                  name: minio-webhook-config
-                  key: pipelineEndpoint
-            - name: KFP_PIPELINE_NAME
-              valueFrom:
-                configMapKeyRef:
-                  name: minio-webhook-config
-                  key: pipelineName
-            - name: TLS_SECRET_NAME
-              value: minio-webhook-tls
+                  key: minioWebhookEndpoint_mybucket
           ports:
-            - containerPort: 8443
+            - containerPort: 9000
+              protocol: TCP
+            - containerPort: 9090
               protocol: TCP
           imagePullPolicy: Always
           volumeMounts:
             - name: data
               mountPath: /data
               subPath: minio
-            - name: minio-webhook-tls
-              mountPath: /var/run/secrets/minio-webhook-tls
+            - name: minio-tls
+              mountPath: /var/run/secrets/minio-tls
               readOnly: true
           terminationMessagePolicy: File
           image: >-
-            quay.io/fdupont-redhat/minio-webhook:latest
+            quay.io/minio/minio:latest
+          args:
+            - server
+            - /data
+            - --console-address
+            - :9090
+            - --certs-dir
+            - /tmp/certs
           lifecycle:
             postStart:
               exec:
                 command:
                   - /bin/sh
                   - -c
-                  - /usr/bin/python3.12 /app/minio_webhook_enable.py
+                  - |
+                    mkdir -p /tmp/certs/CAs ;
+                    ln -s /var/run/secrets/minio-tls/tls.key /tmp/certs/private.key ;
+                    ln -s /var/run/secrets/minio-tls/tls.crt /tmp/certs/public.crt ;
+                    ln -s /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt /tmp/certs/CAs/service-ca.crt
             preStop:
               exec:
-                command:
-                  - /bin/sh
-                  - -c
-                  - /usr/bin/python3.12 /app/minio_webhook_disable.py
+                command: ["/bin/sh", "-c", "rm -f /tmp/certs"]
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst
@@ -125,24 +113,3 @@ spec:
     type: Recreate
   revisionHistoryLimit: 10
   progressDeadlineSeconds: 600
----
-kind: Service
-apiVersion: v1
-metadata:
-  annotations:
-    service.beta.openshift.io/serving-cert-secret-name: minio-webhook-tls
-  name: minio-webhook
-spec:
-  ipFamilies:
-    - IPv4
-  ports:
-    - name: hook
-      protocol: TCP
-      port: 8443
-      targetPort: 8443
-  internalTrafficPolicy: Cluster
-  type: ClusterIP
-  ipFamilyPolicy: SingleStack
-  sessionAffinity: None
-  selector:
-    app: minio-webhook

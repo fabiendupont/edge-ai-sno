@@ -1,0 +1,35 @@
+---
+apiVersion: "serving.kserve.io/v1beta1"
+kind: "InferenceService"
+metadata:
+  annotations:
+    openshift.io/display-name: yolo
+    security.opendatahub.io/enable-auth: 'true'
+    serving.kserve.io/deploymentMode: RawDeployment
+  labels:
+    network.kserve.io/visibility: exposed
+    opendatahub.io/dashboard: 'true'
+  name: yolo
+  namespace: edge-ai-app
+spec:
+  predictor:
+    minReplicas: 1
+    maxReplicas: 1
+    serviceAccountName: yolo
+    model:
+      protocolVersion: v2
+      modelFormat:
+        name: onnx
+        version: '1'
+      resources:
+        limits:
+          cpu: '2'
+          memory: 4Gi
+        requests:
+          cpu: '1'
+          memory: 2Gi
+      runtime: ovms
+      storageUri: 's3://models/yolo'
+#      storage:
+#        key: minio
+#        path: yolo

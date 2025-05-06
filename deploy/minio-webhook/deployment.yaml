@@ -1,0 +1,104 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: input-infer
+  namespace: minio-webhooks
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: input-infer
+  template:
+    metadata:
+      labels:
+        app: input-infer
+    spec:
+      volumes:
+        - name: input-infer-tls
+          secret:
+            secretName: input-infer-tls
+      containers:
+        - resources:
+            limits:
+              cpu: 250m
+              memory: 200Mi
+            requests:
+              cpu: 20m
+              memory: 100Mi
+          readinessProbe:
+            tcpSocket:
+              port: 8443
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          name: input-infer
+          livenessProbe:
+            tcpSocket:
+              port: 8443
+            initialDelaySeconds: 30
+            timeoutSeconds: 1
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          env:
+            - name: MINIO_SERVICE_NAME
+              value: minio
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: minioRootUsername
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: minioRootPassword
+            - name: MINIO_BUCKET_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: minio-webhook-config
+                  key: bucketName
+            - name: MODEL_SERVER_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: minio-webhook-config
+                  key: pipelineEndpoint
+            - name: TLS_SECRET_NAME
+              value: input-infer-tls
+          ports:
+            - containerPort: 8443
+              protocol: TCP
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: input-infer-tls
+              mountPath: /var/run/secrets/input-infer-tls
+              readOnly: true
+          terminationMessagePolicy: File
+          image: >-
+            quay.io/fdupont-redhat/minio-webhook:latest
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - /usr/bin/python3.12 /app/minio_webhook_enable.py
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - /usr/bin/python3.12 /app/minio_webhook_disable.py
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
