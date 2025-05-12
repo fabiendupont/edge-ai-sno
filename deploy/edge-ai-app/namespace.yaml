@@ -5,4 +5,4 @@ metadata:
   name: edge-ai-app
   labels:
     opendatahub.io/dashboard: "true"
-    modelmesh-enabled: "true"
+    modelmesh-enabled: "false"

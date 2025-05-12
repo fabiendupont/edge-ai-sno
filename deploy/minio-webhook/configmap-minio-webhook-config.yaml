@@ -1,0 +1,10 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: minio-webhook-config
+  namespace: minio-webhook
+data:
+  bucketName: ingest
+  minioEndpoint: "minio.minio.svc:9000"
+  minioWebhookEndpoint_ingest: "https://transformer.minio-webhook.svc:8443"

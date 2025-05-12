@@ -4,8 +4,9 @@ kind: "InferenceService"
 metadata:
   annotations:
     openshift.io/display-name: yolo
-    security.opendatahub.io/enable-auth: 'true'
+#    security.opendatahub.io/enable-auth: 'true'
     serving.kserve.io/deploymentMode: RawDeployment
+#    serving.kserve.io/deploymentMode: Serverless
   labels:
     network.kserve.io/visibility: exposed
     opendatahub.io/dashboard: 'true'
@@ -13,8 +14,6 @@ metadata:
   namespace: edge-ai-app
 spec:
   predictor:
-    minReplicas: 1
-    maxReplicas: 1
     serviceAccountName: yolo
     model:
       protocolVersion: v2
@@ -30,6 +29,58 @@ spec:
           memory: 2Gi
       runtime: ovms
       storageUri: 's3://models/yolo'
-#      storage:
-#        key: minio
-#        path: yolo
+  transformer:
+    containers:
+      - image: quay.io/fdupont-redhat/edge-ai-sno/transformer:latest
+        imagePullPolicy: Always
+        name: kserve-container
+        command:
+          - "python3.12"
+          - "-m"
+          - "model"
+        args:
+          - "--model_name"
+          - "yolo"
+        env:
+          - name: MINIO_ENDPOINT
+            valueFrom:
+              configMapKeyRef:
+                name: minio-config
+                key: minioEndpoint
+          - name: MINIO_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: minio-credentials
+                key: username
+          - name: MINIO_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: minio-credentials
+                key: password
+          - name: MINIO_BUCKET_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: minio-config
+                key: bucketName
+        lifecycle:
+          postStart:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  /usr/bin/python3.12 /app/minio_webhook_enable.py > /data/enable.log 2>&1
+          preStop:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  /usr/bin/python3.12 /app/minio_webhook_disable.py > /data/disable.log 2>&1
+        volumeMounts:
+          - name: data
+            mountPath: /data
+    volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: transformer-data

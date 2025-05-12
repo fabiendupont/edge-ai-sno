@@ -1,0 +1,28 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: service-ca
+  namespace: edge-ai-app
+data:
+  cabundle.crt: |
+    -----BEGIN CERTIFICATE-----
+    MIIDUTCCAjmgAwIBAgIIIpwHgOYr8qcwDQYJKoZIhvcNAQELBQAwNjE0MDIGA1UE
+    Awwrb3BlbnNoaWZ0LXNlcnZpY2Utc2VydmluZy1zaWduZXJAMTc0NjE4OTAwMjAe
+    Fw0yNTA1MDIxMjMwMDFaFw0yNzA3MDExMjMwMDJaMDYxNDAyBgNVBAMMK29wZW5z
+    aGlmdC1zZXJ2aWNlLXNlcnZpbmctc2lnbmVyQDE3NDYxODkwMDIwggEiMA0GCSqG
+    SIb3DQEBAQUAA4IBDwAwggEKAoIBAQCzgK2jnsGwsuhOYGist98ZmKNw96K1oEOm
+    xUFCE/H8khD/fx/WD6GZbsACpBQSdR3JZlmcghGKsIxO3lhgoOtnFeils3ckNn8B
+    DCLpgqA0AfhViGv+QaOzQzwKqBJhJdaLZxbZdiv9r3rDS17E8WeQ3mP8JHdsLP0g
+    InsQsYXYcgWPaTEXU9ipD/IQEcuCLnCN1sX+TPkcsL8cce7S+zpmfnXBlHGfj2Z5
+    6A6gtg9WiIC/j0fS/l94tU4kUVWXF9C5piUdqXnHvx0ntefRJ5DBQVXSpV5OSokb
+    ej2Vi4O5rO3Q//iKgw+a8NNG5/Llm7eDEeifoR/GSGKJV0d/HLdVAgMBAAGjYzBh
+    MA4GA1UdDwEB/wQEAwICpDAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBTlq7To
+    7vH+x7a34JX0tZ2yQN3gzDAfBgNVHSMEGDAWgBTlq7To7vH+x7a34JX0tZ2yQN3g
+    zDANBgkqhkiG9w0BAQsFAAOCAQEASr3ObxwDLa084G2RY/ehxZJbSkhW1AMqHIXU
+    yJ0Q6UunOXqwxAFtvzWPTb0j6ruDlvCWY87U2ARj7e5X/VeW61QD/zaz1w+CdMo7
+    faDfQcJT6FGMD6s1pki++LJ8UrfFehmx51un+mZWl245GZvnRqpuyWMB9PLnBkvD
+    j+du4CWdnUlZk+lsE1FZgwVyN+ZFP47hZ+tfiS/h/REj81Bq0jD13RboHP1qv+tt
+    Y2dmTX0qjorcC1MBt3qlKql18IxdaHsQYANtY/HdqC+DUAU79GS7WTwy/Znh0zwx
+    P/ycTsDM0NW37ZvGdGvyQwcj24NwDVoTLjy2hOcU+9fnDjs/tA==
+    -----END CERTIFICATE-----

@@ -2,22 +2,25 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: input-infer
-  namespace: minio-webhooks
+  name: transformer
+  namespace: minio-webhook
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: input-infer
+      app: transformer
   template:
     metadata:
       labels:
-        app: input-infer
+        app: transformer
     spec:
       volumes:
-        - name: input-infer-tls
+        - name: data
+          persistentVolumeClaim:
+            claimName: minio-webhook-data
+        - name: transformer-tls
           secret:
-            secretName: input-infer-tls
+            secretName: transformer-tls
       containers:
         - resources:
             limits:
@@ -35,7 +38,7 @@ spec:
             successThreshold: 1
             failureThreshold: 3
           terminationMessagePath: /dev/termination-log
-          name: input-infer
+          name: transformer
           livenessProbe:
             tcpSocket:
               port: 8443
@@ -45,37 +48,37 @@ spec:
             successThreshold: 1
             failureThreshold: 3
           env:
-            - name: MINIO_SERVICE_NAME
-              value: minio
-            - name: MINIO_ROOT_USER
+            - name: MINIO_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: minio-webhook-config
+                  key: minioEndpoint
+            - name: MINIO_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: minio-credentials
-                  key: minioRootUsername
-            - name: MINIO_ROOT_PASSWORD
+                  key: username
+            - name: MINIO_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: minio-credentials
-                  key: minioRootPassword
+                  key: password
             - name: MINIO_BUCKET_NAME
               valueFrom:
                 configMapKeyRef:
                   name: minio-webhook-config
                   key: bucketName
-            - name: MODEL_SERVER_ENDPOINT
-              valueFrom:
-                configMapKeyRef:
-                  name: minio-webhook-config
-                  key: pipelineEndpoint
             - name: TLS_SECRET_NAME
-              value: input-infer-tls
+              value: transformer-tls
           ports:
             - containerPort: 8443
               protocol: TCP
           imagePullPolicy: Always
           volumeMounts:
-            - name: input-infer-tls
-              mountPath: /var/run/secrets/input-infer-tls
+            - name: data
+              mountPath: /data
+            - name: transformer-tls
+              mountPath: /var/run/secrets/transformer-tls
               readOnly: true
           terminationMessagePolicy: File
           image: >-
@@ -86,13 +89,15 @@ spec:
                 command:
                   - /bin/sh
                   - -c
-                  - /usr/bin/python3.12 /app/minio_webhook_enable.py
+                  - |
+                    /usr/bin/python3.12 /app/minio_webhook_enable.py > /data/enable.log 2>&1
             preStop:
               exec:
                 command:
                   - /bin/sh
                   - -c
-                  - /usr/bin/python3.12 /app/minio_webhook_disable.py
+                  - |
+                    /usr/bin/python3.12 /app/minio_webhook_disable.py > /data/disable.log 2>&1
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst

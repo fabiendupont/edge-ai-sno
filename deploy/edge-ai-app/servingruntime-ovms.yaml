@@ -3,7 +3,7 @@ apiVersion: serving.kserve.io/v1alpha1
 kind: ServingRuntime
 metadata:
   annotations:
-#    enable-route: 'true'
+    enable-route: 'true'
     opendatahub.io/accelerator-name: ''
     opendatahub.io/apiProtocol: REST
     opendatahub.io/recommended-accelerators: '["nvidia.com/gpu"]'

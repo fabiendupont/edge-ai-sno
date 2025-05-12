@@ -1,63 +1,77 @@
-# Kubeflow pipeline for MinIO event
+# Kserve inference for MinIO event
 
-## Quick start
+We assume that you have installed OpenShift AI operator.
 
-We assume that you have installed OpenShift AI and that you have created a
-namespace to deploy the stack. In the follwing examples, the namespace is named
-`myspace`. We also assume that you have a default storage class for the
-persistent volumes.
+## Configuring the data science cluster
 
-For convenience, the configuration has been isolated in the
-[deploy/config.yaml](deploy/config.yaml) file. You can set the MinIO credentials,
-the MinIO bucket for the files that trigger the Kubeflow pipeline, the Kubeflow
-pipeline name to trigger and the webhook endpoint URL. Simply modify the values
-to your needs, before running the following command.
+The following command creates a data science cluster configuration that enables
+or disables the features. This file Kserver and ModelMesh for single and multi
+model inference services. The other features are disabled.
 
 ```bash
-oc create -n myspace -f deploy/config.yaml
+oc create -f deploy/datasciencecluster-default-dsc.yaml
 ```
 
-The following command creates a MinIO deployment with a single pod,
-with a 20 GB persistent volume for the data. It uses service service
-certificates for the TLS configuration on the internal network, and reencrypt
-routes for external facing URLs.
+## Deploying MinIO
+
 
 ```bash
-oc create -n myspace -f deploy/minio.yaml
-```
-
-The following command creates the webhook that is called when files are created
-in the bucket named `mybucket`. The bucket is created by the postStart command
-if it does not exist and the event notification is also created. The even
-notification configuration is removed when the webhook pod exits. Here again, a
-service service certificate is used for TLS.
-
-```bash
-oc create -n myspace -f deploy/minio-webhook.yaml
-```
-
-## Building the webhook container image
-
-```bash
-podman build -t quay.io/fdupont-redhat/minio-webhook:latest -f Containerfile .
+oc create -f deploy/minio/namespace.yaml
 ```
 
 ```bash
-podman push quay.io/fdupont-redhat/minio-webhook:latest
-```
-
-## Building the webhook container image
-
-```bash
-podman build -t quay.io/fdupont-redhat/minio-webhook:latest -f Containerfile .
+oc create -f deploy/minio/configmap.yaml
+oc create -f deploy/minio/secret.yaml
 ```
 
 ```bash
-podman push quay.io/fdupont-redhat/minio-webhook:latest
+oc create -f deploy/minio/persistentvolumeclaim.yaml
 ```
 
-## Using your own webhook container image
+```bash
+oc create -f deploy/minio/deployment.yaml
+```
 
-Simply modify the `spec.template.spec.containers[0].image` field in
-[deploy/minio-webhook.yaml](deploy/minio-webhook.yaml) to use the image you
-want.
+```bash
+oc create -f deploy/minio/service.yaml
+```
+
+```bash
+oc create -f deploy/minio/route.yaml
+```
+
+## Upload the model
+
+
+
+## Deploy the inference service
+
+```bash
+oc create -f deploy/edge-ai-app/namespace.yaml
+```
+
+```bash
+oc create -f deploy/edge-ai-app/configmap-minio-config.yaml
+```
+
+```bash
+oc create -f deploy/edge-ai-app/secret-storage-config.yaml
+oc create -f deploy/edge-ai-app/secret-minio-credentials.yaml
+```
+
+```bash
+oc create -f deploy/edge-ai-app/persistentvolumeclaim.yaml
+```
+
+```bash
+oc create -f deploy/edge-ai-app/serviceaccount-yolo.yaml
+```
+
+```bash
+oc create -f deploy/edge-ai-app/servingruntime-ovms.yaml
+```
+
+```bash
+oc create -f deploy/edge-ai-app/inferenceservice-yolo.yaml
+```
+

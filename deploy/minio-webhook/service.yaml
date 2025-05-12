@@ -3,9 +3,9 @@ kind: Service
 apiVersion: v1
 metadata:
   annotations:
-    service.beta.openshift.io/serving-cert-secret-name: input-infer-tls
-  name: input-infer
-  namespace: minio-webhooks
+    service.beta.openshift.io/serving-cert-secret-name: transformer-tls
+  name: transformer
+  namespace: minio-webhook
 spec:
   ipFamilies:
     - IPv4
@@ -19,4 +19,4 @@ spec:
   ipFamilyPolicy: SingleStack
   sessionAffinity: None
   selector:
-    app: input-infer
+    app: transformer

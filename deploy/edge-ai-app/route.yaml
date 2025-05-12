@@ -1,0 +1,36 @@
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: yolo
+  namespace: edge-ai-app
+  annotations:
+    openshift.io/host.generated: 'true'
+spec:
+  host: yolo-edge-ai-app.apps.edge-ai-sno.smgglrs.io
+  path: /
+  to:
+    kind: Service
+    name: yolo-transformer
+    weight: 100
+  port:
+    targetPort: yolo-transformer
+  wildcardPolicy: None
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: yolop
+  namespace: edge-ai-app
+  annotations:
+    openshift.io/host.generated: 'true'
+spec:
+  host: yolop-edge-ai-app.apps.edge-ai-sno.smgglrs.io
+  path: /
+  to:
+    kind: Service
+    name: yolo-predictor
+    weight: 100
+  port:
+    targetPort: yolo-predictor
+  wildcardPolicy: None
