@@ -15,4 +15,4 @@ COPY minio_webhook_enable.py /app/minio_webhook_enable.py
 
 USER 1000
 
-EXPOSE 8080
+ENTRYPOINT ["/usr/bin/python3.12", "-m", "model"]

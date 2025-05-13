@@ -4,19 +4,20 @@ kind: "InferenceService"
 metadata:
   annotations:
     openshift.io/display-name: yolo
-#    security.opendatahub.io/enable-auth: 'true'
+    # security.opendatahub.io/enable-auth: 'true'
     serving.kserve.io/deploymentMode: RawDeployment
-#    serving.kserve.io/deploymentMode: Serverless
+    # serving.kserve.io/deploymentMode: Serverless
   labels:
-    network.kserve.io/visibility: exposed
+    # network.kserve.io/visibility: exposed
     opendatahub.io/dashboard: 'true'
   name: yolo
   namespace: edge-ai-app
 spec:
   predictor:
+    maxReplicas: 1
+    minReplicas: 1
     serviceAccountName: yolo
     model:
-      protocolVersion: v2
       modelFormat:
         name: onnx
         version: '1'
