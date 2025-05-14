@@ -62,7 +62,6 @@ spec:
         - "--grpc_port=8081"
         - "--predictor_host=localhost:8888"
         - "--predictor_protocol=v2"
-#        - "--protocol=v1"
       env:
         - name: MINIO_ENDPOINT
           valueFrom:
@@ -79,11 +78,16 @@ spec:
             secretKeyRef:
               name: minio-credentials
               key: password
-        - name: MINIO_BUCKET_NAME
+        - name: MINIO_INPUT_BUCKET_NAME
           valueFrom:
             configMapKeyRef:
               name: minio-config
-              key: bucketName
+              key: inputBucketName
+        - name: MINIO_OUTPUT_BUCKET_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: minio-config
+              key: outputBucketName
       ports:
         - containerPort: 8080
           protocol: TCP
@@ -107,6 +111,9 @@ spec:
 #              - -c
 #              - |
 #                /usr/bin/python3.12 /app/minio_webhook_disable.py > /data/disable.log 2>&1 > line too long (92 > 80 characters)
+#      restartPolicy: Always
+#      termintationGracePeriodSeconds: 30
+#      terminationMessagePolicy: File
       volumeMounts:
         - name: data
           mountPath: /data

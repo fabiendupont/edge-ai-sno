@@ -1,5 +1,4 @@
 kserve
 minio
 numpy
-pillow
-torchvision
+urllib3

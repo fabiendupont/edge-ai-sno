@@ -1,0 +1,31 @@
+---
+apiVersion: "serving.kserve.io/v1beta1"
+kind: "InferenceService"
+metadata:
+  annotations:
+    openshift.io/display-name: yolo-tf
+    # security.opendatahub.io/enable-auth: 'true'
+    serving.kserve.io/deploymentMode: RawDeployment
+  labels:
+#    network.kserve.io/visibility: exposed
+    opendatahub.io/dashboard: 'true'
+  name: yolo-tf
+  namespace: edge-ai-app
+spec:
+  predictor:
+    maxReplicas: 1
+    minReplicas: 1
+    serviceAccountName: yolo
+    model:
+      modelFormat:
+        name: tensorflow
+        version: '1'
+      resources:
+        limits:
+          cpu: '2'
+          memory: 4Gi
+        requests:
+          cpu: '1'
+          memory: 2Gi
+      runtime: yolo
+      storageUri: 's3://models/yolo11n'

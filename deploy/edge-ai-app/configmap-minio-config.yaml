@@ -5,6 +5,7 @@ metadata:
   name: minio-config
   namespace: edge-ai-app
 data:
-  bucketName: ingest
+  inputBucketName: ingest
+  outputBucketName: output
   minioEndpoint: "minio.minio.svc:9000"
   minioWebhookEndpoint_ingest: "http://yolo-transformer.edge-ai-app.svc/v1/models/yolo11n:predict"

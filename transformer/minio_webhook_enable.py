@@ -8,7 +8,7 @@ import urllib3
 minio_username = os.getenv('MINIO_USERNAME')
 minio_password = os.getenv('MINIO_PASSWORD')
 minio_endpoint = os.getenv('MINIO_ENDPOINT')
-minio_bucket_name = os.getenv('MINIO_BUCKET_NAME')
+minio_bucket_name = os.getenv('MINIO_INPUT_BUCKET_NAME')
 minio_notification_config = NotificationConfig(
     queue_config_list=[
         QueueConfig(

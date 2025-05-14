@@ -18,6 +18,7 @@ import io
 import json
 import os
 import sys
+from datetime import datetime
 from typing import Dict, Union
 
 import numpy as np
@@ -80,15 +81,17 @@ def get_input_tensor_from_minio(client, record):
 
     return input_tensor
 
-def put_prediction_to_minio(client, predictions):
+def put_prediction_to_minio(client, filename, predictions):
     """sends the predictions as a numpy array to a file in minio
     Args:
         client: MinIO client object
         predictions: Predictions as a list of numpy arrays
     """
     minio_bucket_name = os.getenv('MINIO_OUTPUT_BUCKET_NAME')
+    timestamp = datetime.timestamp(datetime.now())
+
     try:
-        client.put(minio_bucket_name, , io.BytesIO(predictions), -1)
+        client.put(minio_bucket_name, f"predictions-{timestamp}", io.BytesIO(predictions), -1)
     except Exception as e:
         print(f"Failure to upload predictions to {minio_bucket_name}: {e}")
 
