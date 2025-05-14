@@ -36,17 +36,10 @@ from kserve.model import PredictorProtocol, PredictorConfig
 from minio import Minio
 import urllib3
 
-def get_input_tensor_from_minio(record):
-    """retrieves the numpy array input file from minio and return it
-    Args:
-        record: minio webhook file record
-    Returns:
-        numpy.array: Returns the numpy array as loaded from the file
-    """
+def get_minio_client():
     minio_endpoint = os.getenv('MINIO_ENDPOINT')
     minio_username = os.getenv('MINIO_USERNAME')
     minio_password = os.getenv('MINIO_PASSWORD')
-    minio_bucket_name = os.getenv('MINIO_BUCKET_NAME')
 
     print(f"Creating MinIO client for {minio_endpoint}")
     client = Minio(
@@ -57,6 +50,18 @@ def get_input_tensor_from_minio(record):
             ca_certs='/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt',
         ),
     )
+
+    return client
+
+def get_input_tensor_from_minio(client, record):
+    """retrieves the numpy array input file from minio and return it
+    Args:
+        client: MinIO client object
+        record: MinIO webhook file record
+    Returns:
+        numpy.array: Returns the numpy array as loaded from the file
+    """
+    minio_bucket_name = os.getenv('MINIO_INPUT_BUCKET_NAME')
 
     filename = record['s3']['object']['key']
     print(f"Retrieving {filename} from {minio_bucket_name}")
@@ -74,6 +79,18 @@ def get_input_tensor_from_minio(record):
     os.remove(filepath)
 
     return input_tensor
+
+def put_prediction_to_minio(client, predictions):
+    """sends the predictions as a numpy array to a file in minio
+    Args:
+        client: MinIO client object
+        predictions: Predictions as a list of numpy arrays
+    """
+    minio_bucket_name = os.getenv('MINIO_OUTPUT_BUCKET_NAME')
+    try:
+        client.put(minio_bucket_name, , io.BytesIO(predictions), -1)
+    except Exception as e:
+        print(f"Failure to upload predictions to {minio_bucket_name}: {e}")
 
 
 class ImageTransformer(Model):
@@ -138,12 +155,15 @@ class ImageTransformer(Model):
         headers: Dict[str, str] = None,
         response_headers: Dict[str, str] = None,
     ) -> Union[Dict, InferResponse]:
+        predictions = infer_response.outputs[0].as_numpy().tolist()
+        put_predictions_to_minio(self.minio_client, predictions)
+
         if "request-type" in headers and headers["request-type"] == "v1":
             if self.protocol == PredictorProtocol.REST_V1.value:
                 return infer_response
             else:
                 # if predictor protocol is v2 but transformer uses v1
-                return {"predictions": infer_response.outputs[0].as_numpy().tolist()}
+                return {"predictions": predictions}
         else:
             return infer_response
 

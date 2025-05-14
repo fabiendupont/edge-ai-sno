@@ -10,6 +10,7 @@ RUN pip3.12 install --no-cache-dir --extra-index-url https://download.pytorch.or
 WORKDIR /opt/app-root
 
 COPY model.py .
+COPY simple.py .
 COPY minio_webhook_disable.py /app/minio_webhook_disable.py
 COPY minio_webhook_enable.py /app/minio_webhook_enable.py
 
