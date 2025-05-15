@@ -4,12 +4,10 @@ kind: "InferenceService"
 metadata:
   annotations:
     openshift.io/display-name: yolo
-    # security.opendatahub.io/enable-auth: 'true'
     serving.kserve.io/deploymentMode: RawDeployment
   labels:
-#    network.kserve.io/visibility: exposed
     opendatahub.io/dashboard: 'true'
-  name: yolo
+  name: yolo-no-transformer
   namespace: edge-ai-app
 spec:
   predictor:
@@ -27,5 +25,5 @@ spec:
         requests:
           cpu: '1'
           memory: 2Gi
-      runtime: yolo
+      runtime: yolo-transformer
       storageUri: 's3://models/yolo'

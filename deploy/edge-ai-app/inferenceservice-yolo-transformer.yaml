@@ -1,0 +1,85 @@
+---
+apiVersion: "serving.kserve.io/v1beta1"
+kind: "InferenceService"
+metadata:
+  annotations:
+    openshift.io/display-name: yolo
+    serving.kserve.io/deploymentMode: RawDeployment
+  labels:
+    opendatahub.io/dashboard: 'true'
+  name: yolo-transformer
+  namespace: edge-ai-app
+spec:
+  predictor:
+    maxReplicas: 1
+    minReplicas: 1
+    serviceAccountName: yolo
+    model:
+      modelFormat:
+        name: onnx
+        version: '1'
+      resources:
+        limits:
+          cpu: '2'
+          memory: 4Gi
+        requests:
+          cpu: '1'
+          memory: 2Gi
+      runtime: yolo-no-transformer
+      storageUri: 's3://models/yolo'
+  transformer:
+    containers:
+      - image: quay.io/fdupont-redhat/edge-ai-sno/transformer:latest
+        imagePullPolicy: Always
+        name: transformer-container
+        command:
+          - "python3.12"
+          - "-m"
+          - "simple"
+        args:
+          - "--model_name=yolo"
+#          - "--http_port=8080"
+#          - "--grpc_port=8081"
+#          - "--predictor_host=localhost:8888"
+#          - "--predictor_protocol=v2"
+        env:
+          - name: MINIO_ENDPOINT
+            valueFrom:
+              configMapKeyRef:
+                name: minio-config
+                key: minioEndpoint
+          - name: MINIO_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: minio-credentials
+                key: username
+          - name: MINIO_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: minio-credentials
+                key: password
+          - name: MINIO_INPUT_BUCKET_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: minio-config
+                key: inputBucketName
+          - name: MINIO_OUTPUT_BUCKET_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: minio-config
+                key: outputBucketName
+        ports:
+          - containerPort: 8080
+            protocol: TCP
+        readinessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+          - name: data
+            mountPath: /data
+    volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: transformer-data

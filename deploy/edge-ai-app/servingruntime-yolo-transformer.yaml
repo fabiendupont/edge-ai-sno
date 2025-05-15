@@ -9,7 +9,7 @@ metadata:
     opendatahub.io/template-display-name: OpenVINO Model Server
     opendatahub.io/template-name: kserve-ovms
     openshift.io/display-name: Yolo
-  name: yolo
+  name: yolo-transformer
   namespace: edge-ai-app
   labels:
     opendatahub.io/dashboard: 'true'
@@ -49,7 +49,7 @@ spec:
           name: shm
         - mountPath: /data
           name: data
-    - image: quay.io/fdupont-redhat/edge-ai-sno/private-transformer:latest
+    - image: quay.io/fdupont-redhat/edge-ai-sno/transformer:latest
       imagePullPolicy: Always
       name: transformer-container
       command:
@@ -96,29 +96,9 @@ spec:
           port: 8080
         initialDelaySeconds: 5
         periodSeconds: 5
-#      lifecycle:
-#        postStart:
-#          exec:
-#            command:
-#              - /bin/sh
-#              - -c
-#              - |
-#                /usr/bin/python3.12 /app/minio_webhook_enable.py > /data/enable.log 2>&1 > line too long (90 > 80 characters)
-#        preStop:
-#          exec:
-#            command:
-#              - /bin/sh
-#              - -c
-#              - |
-#                /usr/bin/python3.12 /app/minio_webhook_disable.py > /data/disable.log 2>&1 > line too long (92 > 80 characters)
-#      restartPolicy: Always
-#      termintationGracePeriodSeconds: 30
-#      terminationMessagePolicy: File
       volumeMounts:
         - name: data
           mountPath: /data
-  imagePullSecrets:
-    - name: image-pull-secret
   multiModel: false
   protocolVersions:
     - v2
