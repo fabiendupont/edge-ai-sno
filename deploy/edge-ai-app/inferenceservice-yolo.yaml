@@ -7,7 +7,7 @@ metadata:
     serving.kserve.io/deploymentMode: RawDeployment
   labels:
     opendatahub.io/dashboard: 'true'
-  name: yolo-transformer
+  name: yolo
   namespace: edge-ai-app
 spec:
   predictor:
@@ -25,7 +25,7 @@ spec:
         requests:
           cpu: '1'
           memory: 2Gi
-      runtime: yolo-no-transformer
+      runtime: yolo
       storageUri: 's3://models/yolo'
   transformer:
     containers:
@@ -35,13 +35,10 @@ spec:
         command:
           - "python3.12"
           - "-m"
-          - "simple"
+          - "image_transform"
         args:
           - "--model_name=yolo"
-#          - "--http_port=8080"
-#          - "--grpc_port=8081"
-#          - "--predictor_host=localhost:8888"
-#          - "--predictor_protocol=v2"
+          - "--predictor_protocol=v2"
         env:
           - name: MINIO_ENDPOINT
             valueFrom:
@@ -68,6 +65,8 @@ spec:
               configMapKeyRef:
                 name: minio-config
                 key: outputBucketName
+          - name: MINIO_USE_HTTPS
+            value: "1"
         ports:
           - containerPort: 8080
             protocol: TCP

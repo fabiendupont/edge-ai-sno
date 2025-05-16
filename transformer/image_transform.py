@@ -17,12 +17,14 @@ import base64
 import io
 import json
 import os
-import urllib.parse
 import sys
+import urllib.parse
 from datetime import datetime
 from typing import Dict, Union
 
 import numpy as np
+import torchvision.transforms as transforms
+from PIL import Image
 
 from kserve import (
     Model,
@@ -64,7 +66,24 @@ def get_minio_client():
 
     return client
 
-class SimpleTransformer(Model):
+def transform_image(byte_array):
+    """converts the input image of Bytes Array into Tensor
+    Args:
+        instance (dict): The request input for image bytes.
+    Returns:
+        list: Returns converted tensor as input for predict handler with v1/v2 inference protocol.
+    """
+    print(f"Transforming image with torchvision")
+    image_processing = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.1307,), (0.3081,))
+    ])
+    #image = Image.open(io.BytesIO(byte_array))
+    image = Image.open(byte_array)
+    tensor = image_processing(image).numpy()
+    return tensor
+
+class ImageTransformer(Model):
     def __init__(
         self,
         name: str,
@@ -96,19 +115,19 @@ class SimpleTransformer(Model):
             input_data = None
             filename = None
             for indx, record in enumerate(payload["Records"]):
-                filename = urllib.parse.unquote(record["s3"]["object"]["key"]),
+                filename = urllib.parse.unquote(record["s3"]["object"]["key"])
                 minio_object = self.minio_client.get_object(minio_bucket_name, filename)
-                sample = np.load(io.BytesIO(minio_object.read()), allow_pickle=True)
+                sample = transform_image(io.BytesIO(minio_object.read()))
                 if input_data is None:
                     input_data = np.empty((batch_size,)+sample.shape, dtype=sample.dtype)
                 input_data[indx] = (sample / np.average(sample)).astype(np.float32)
 
         infer_inputs = [
             InferInput(
-                name="input_4",
+                name="images",
                 datatype="FP32",
                 shape=input_data.shape,
-                data=input_data.tolist(),
+                data=input_data,
             )
         ]
         infer_request = InferRequest(
@@ -156,7 +175,7 @@ args, _ = parser.parse_known_args()
 if __name__ == "__main__":
     if args.configure_logging:
         logging.configure_logging(args.log_config_file)
-    model = SimpleTransformer(
+    model = ImageTransformer(
         args.model_name,
         predictor_host=args.predictor_host,
         predictor_protocol=args.predictor_protocol,

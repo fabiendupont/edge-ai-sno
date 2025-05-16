@@ -9,7 +9,7 @@ metadata:
     opendatahub.io/template-display-name: OpenVINO Model Server
     opendatahub.io/template-name: kserve-ovms
     openshift.io/display-name: Yolo
-  name: yolo-no-transformer
+  name: yolo
   namespace: edge-ai-app
   labels:
     opendatahub.io/dashboard: 'true'

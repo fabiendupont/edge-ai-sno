@@ -62,13 +62,13 @@ spec:
                   key: minioRootPassword
             - name: MINIO_BROWSER
               value: 'on'
-            - name: MINIO_NOTIFY_WEBHOOK_ENABLE_ingest
+            - name: MINIO_NOTIFY_WEBHOOK_ENABLE_yolo
               value: "on"
-            - name: MINIO_NOTIFY_WEBHOOK_ENDPOINT_ingest
+            - name: MINIO_NOTIFY_WEBHOOK_ENDPOINT_yolo
               valueFrom:
                 configMapKeyRef:
                   name: minio-webhook-config
-                  key: minioWebhookEndpoint_ingest
+                  key: minioWebhookEndpoint_yolo
           ports:
             - containerPort: 9000
               protocol: TCP

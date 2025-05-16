@@ -5,6 +5,4 @@ metadata:
   name: minio-webhook-config
   namespace: minio
 data:
-  bucketName: ingest
-  minioWebhookEndpoint_model1: "http://yolo-transformer.edge-ai-app.svc/v1/models/yolo:predict"
-  minioWebhookEndpoint_model2: "http://model2-transformer.edge-ai-app.svc/v1/models/model2:predict"
+  minioWebhookEndpoint_yolo: "http://yolo-transformer.edge-ai-app.svc/v1/models/yolo:predict"
