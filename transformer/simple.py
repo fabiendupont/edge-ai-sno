@@ -96,7 +96,7 @@ class SimpleTransformer(Model):
             input_data = None
             filename = None
             for indx, record in enumerate(payload["Records"]):
-                filename = urllib.parse.unquote(record["s3"]["object"]["key"]),
+                filename = urllib.parse.unquote(record["s3"]["object"]["key"])
                 minio_object = self.minio_client.get_object(minio_bucket_name, filename)
                 sample = np.load(io.BytesIO(minio_object.read()), allow_pickle=True)
                 if input_data is None:
